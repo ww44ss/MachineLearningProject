@@ -8,17 +8,17 @@ output: html_document
 
 ###Summary
 
-this is part of the Coursera "Machine Learning" Coursera taught by Roger Peng, Jeff Leek, and 
+Project for the Coursera "Machine Learning" course taught by Roger Peng, Jeff Leek, and Brian Caffo of the Dept of Statistics of the Bloomberg School at Johns Hopkins University.
 
-the data used here come from this [source](http://groupware.les.inf.puc-rio.br/har). 
+The data used for this project have been generously provided by [Groupware Brasil](http://groupware.les.inf.puc-rio.br/har). 
 
-###Getting and cleaning data
+###A: Getting and cleaning data
 
 ```{r, echo=FALSE}
 
 if(getwd()!="/Users/winstonsaunders/Documents/MachineLearningProject") setwd("MachineLearningProject")
 
-##Read the files assigning na.strings
+##Read the files assigning na.strings to blanks and "NA"
 
 training<-read.csv("pml-training.csv", na.strings=c("", "NA"))
 testing<-read.csv("pml-testing.csv", na.strings=c("", "NA"))
@@ -37,7 +37,7 @@ head(testing, 2)
 
 ```
 
-Inspection reveals there are many NA values in the data. To keep these from biasing results and to simplify the analysis, I choose to eliminate those columnes with nigh numbers (>50%) of NA values. The cleaning also eliminates non-data columns like timestamps, etc.
+Inspection reveals there are many NA values in the data. I choose to eliminate those columnes with nigh numbers (>50%) of NA values. The cleaning also has steps to eliminate non-data columns like timestamps, etc.
 
 ```{r , echo=FALSE}
 #number of observations
@@ -46,46 +46,37 @@ nObs<-length(training$classe)
 
 
 
-```{r, echo=FALSE}
-
-Ctraining<-training[, colSums(is.na(training))/nObs<.5]
-#eliminate the same columns from the testing data 
-Ctesting<-testing[, colSums(is.na(training))/nObs<.5] 
-
-#Ctraining[1:5, 1:10]
+```{r, echo=6:7}
+##This code chunk clean up the data and creates macro cleaned data sets Ctraining and Ctesting.
+        ##eliminate "high NA value" columns
+        Ctraining<-training[, colSums(is.na(training))/nObs<.5]
+        #eliminate the same columns from the testing data 
+        Ctesting<-testing[, colSums(is.na(training))/nObs<.5] 
+        ##inspect the Ctraining Dataset
+        Ctraining[1:5, 1:10]
 
 ##Get rid of non-data columns
 
-Ctraining<-Ctraining[,8:ncol(Ctraining)]
-Ctesting<-Ctesting[,8:ncol(Ctesting)]
+        Ctraining<-Ctraining[,8:ncol(Ctraining)]
+        Ctesting<-Ctesting[,8:ncol(Ctesting)]
 
-#Ctraining$classe<-as.factor(Ctraining$classe)
-#Ctesting$classe<-as.factor(Ctesting$classe)
-
-str(Ctraining)
-
-#Ctraining[1:5, 1:10]
-#dim(training)
-
-
-
-##verify no NAs left
-##colSums(is.na(Ctraining))
+        ##verify no NAs left
+        ##colSums(is.na(Ctraining))
 
 ```
 
-THis cleaning reduces the number of data columns from `r dim(training)[2]` to `r dim(Ctraining)[2]`. The testing data also is reduced to `r dim(Ctesting)[2]` columns.
+Cleaning reduces the number of data columns from `r dim(training)[2]` to `r dim(Ctraining)[2]`. The testing data also is reduced to `r dim(Ctesting)[2]` columns.
 
-###Creating a Model
+###B: Data Exploration
 
-First step is to divide the taining data into a pair of training and test data in order to test the reliability of model development. 
+First step is to divide the taining data into a pair of training and test data in order to test the reliability of model development before making predictions. 
 
-```{r, echo=FALSE}
+```{r, echo=4:8, message=FALSE}
 library(caret)
 #library(AppliedPredictiveModeling)
 
-set.seed(8675309)
-
+        set.seed(8675309)
+        ## Divide the Cleaned Training Data into a Train and Test Data set
         inTrain <- createDataPartition(y=Ctraining$classe, p=0.60, list=FALSE) 
         Train <- Ctraining[inTrain,] 
         Test <- Ctraining[-inTrain,]
@@ -97,33 +88,26 @@ set.seed(8675309)
 
 ```{r}
 
-colnames(Train)
-
 par(mfrow=c(2,2))
 plot(Train$classe,Train[,2], color="red")
-plot(Train$classe,Train[,27], color="blue")
-plot(Train$classe,Train[,39], color="darkred")
+plot(Train$classe,Train[,26], color="blue")
+plot(Train$classe,Train[,28], color="darkred")
 plot(Train$classe,Train[,51], color="darkgreen")
-
-
 
 ```
 
-###Build model
+###C: Building a Model
 
 A principal components analysis shows that we require 20 variables to explain 90% of the observed variation and 26 variables to explain 95% of the variation. 
 
 
-```{r}
+```{r, eval=TRUE}
+##Analysis to find out how many variables are needed to do describe the data.
 
-last<-ncol(Train)
-prep_Train<-preProcess(Train[,-last])
-centerscaled<-predict(prep_Train, Train[,-last])
-summary(prcomp(centerscaled))
-
-
-
-#model <- train(classe~., data = Train, method="rf", trControl = trainControl(method = "cv", number = 4, allowParallel = TRUE,verboseIter = TRUE))
+        last<-ncol(Train)
+        prep_Train<-preProcess(Train[,-last])
+        centerscaled<-predict(prep_Train, Train[,-last])
+        summary(prcomp(centerscaled))
 
 
 ```
@@ -134,24 +118,34 @@ summary(prcomp(centerscaled))
         pcaprep<-preProcess(Train[,-last], method="pca", pcaComp=10)
         TrainPCA<-predict(pcaprep, Train[,-last])
 
-        summary(TrainPCA)
+##Build Random Forest Model
+        #Start a timer
+        time0 <- proc.time()
+        
+        modelPCA<-train(Train$classe~., method="rf", data=TrainPCA)
 
-        head(TrainPCA)
+        calctime<-proc.time()-time0
 
-        ##use to build model
-        #model<-train(Train$classe~., method="binomial", data=TrainPCA)
+ ##use the model to make a prediction using the raw data
+        predictionPCA <- predict(modelPCA, Test)
+        ##test confusion matrix
+        confusionMatrix(Test$classe, predictionPCA)
 
+
+```
+
+```{r}
         ##understand how long calculation in taking
         time0 <- proc.time()
 
-        model1 <- train(classe~., data = Train, method="rf", trControl = trainControl(method = "cv", number = 4, allowParallel = TRUE,verboseIter = TRUE))
+        model1 <- train(classe~., data = Train, method="rf", trControl = trainControl(method = "boot", number = 4, allowParallel = TRUE,verboseIter = TRUE))
 
         calctime<-proc.time()-time0
 
         ##Show the calculation time
         calctime
 
-        ##use the model to make a prediction
+        ##use the model to make a prediction using the raw data
         prediction1 <- predict(model1, Test)
         ##test confusion matrix
         confusionMatrix(Test$classe, prediction1)

@@ -78,7 +78,7 @@ THis cleaning reduces the number of data columns from `r dim(training)[2]` to `r
 
 ###Creating a Model
 
-First step is to create a model test subset
+First step is to divide the taining data into a pair of training and test data in order to test the reliability of model development. 
 
 ```{r, echo=FALSE}
 library(caret)
@@ -93,16 +93,18 @@ set.seed(8675309)
 ```
 
 
-###Some Plots
+###Plot a few dependencies to get an idea of what the data look like
 
 ```{r}
 
 colnames(Train)
 
-plot(Train[,2], Train$classe)
-plot(Train[,7], Train$classe)
-plot(Train[,25], Train$classe)
-plot(Train[,33], Train$classe)
+par(mfrow=c(2,2))
+plot(Train$classe,Train[,2], color="red")
+plot(Train$classe,Train[,27], color="blue")
+plot(Train$classe,Train[,39], color="darkred")
+plot(Train$classe,Train[,51], color="darkgreen")
+
 
 
 ```
@@ -137,8 +139,27 @@ summary(prcomp(centerscaled))
         head(TrainPCA)
 
         ##use to build model
-        model<-train(Train$classe~., method="binomial", data=TrainPCA)
+        #model<-train(Train$classe~., method="binomial", data=TrainPCA)
+
+        ##understand how long calculation in taking
+        time0 <- proc.time()
+
+        model1 <- train(classe~., data = Train, method="rf", trControl = trainControl(method = "cv", number = 4, allowParallel = TRUE,verboseIter = TRUE))
+
+        calctime<-proc.time()-time0
+
+        ##Show the calculation time
+        calctime
+
+        ##use the model to make a prediction
+        prediction1 <- predict(model1, Test)
+        ##test confusion matrix
+        confusionMatrix(Test$classe, prediction1)
+
+        
 
         #model2<-train(Train$classe~., method="glm", data=Train)
 
         #confusionMatrix(Test$classe,predict(modelfit,Test))
+```
+

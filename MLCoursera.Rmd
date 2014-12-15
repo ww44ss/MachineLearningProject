@@ -1,28 +1,78 @@
 
 ---
-title: "Predicting Road Safety from Twitter"
+title: "Machine Learning Project"
 author: "Winston Saunders"
 date: "Dec 2014"
 output: html_document
 ---
 
+###"Correct" training analysis
+
+this is part of the Coursera "Machine Learning" Coursera taught by Roger Peng, Jeff Leek, and 
+
+the data used here come from this [source](http://groupware.les.inf.puc-rio.br/har). 
 
 
 
-Title
-========================================================
+```{r, echo=FALSE}
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring web pages (click the **Help** toolbar button for more details on using R Markdown).
+if(getwd()!="/Users/winstonsaunders/Documents/MachineLearningProject") setwd("MachineLearningProject")
 
-When you click the **Knit HTML** button a web page will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+##Read the files assigning na.strings
+
+training<-read.csv("pml-training.csv", na.strings=c("", "NA"))
+testing<-read.csv("pml-testing.csv", na.strings=c("", "NA"))
+
+```
+
+The raw training set consists of `r dim(training)[1]` rows and `r dim(training)[2]` columns.
+
+##Cleaning the data
+
+```{r "look", eval=FALSE, echo=FALSE}
+
+##look at raw data
+
+head(training,2)
+
+head(testing, 2)
+
+```
+
+There are many NA values in the data. To keep these from biasing results and to simplify the analysis, I choose to eliminate them. 
+
+```{r , echo=FALSE}
+
+plot(training$gyros_belt_x, training$classe)
+
+colnames(training)
+
+nonNAcount <- apply(training, 2, function(x) length(which(!is.na(x))))
+nObs<-length(training$classe)
+```
+
+```{r, fig.width=7, fig.height=6, eval=FALSE}
+hist(nonNAcount/nObs)
+
+
+```
+
+
 
 ```{r}
-summary(cars)
+
+Ctraining<-training[, colSums(is.na(training))/nObs<.5]
+#eliminate the same columns from the testing data 
+Ctesting<-testing[, colSums(is.na(training))/nObs<.5] 
+
+dim(training)
+
+dim(Ctraining)
+
+##verify no NAs left
+##colSums(is.na(Ctraining))
+
 ```
 
-You can also embed plots, for example:
-
-```{r fig.width=7, fig.height=6}
-plot(cars)
-```
+Cleaning the data b eliminating columns with > 50% NAs reduces the number of data columns from `r dim(training)[2]` to `r dim(Ctraining)[2]`.
 

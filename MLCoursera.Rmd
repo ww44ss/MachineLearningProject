@@ -6,13 +6,13 @@ date: "Dec 2014"
 output: html_document
 ---
 
-###"Correct" training analysis
+###Summary
 
 this is part of the Coursera "Machine Learning" Coursera taught by Roger Peng, Jeff Leek, and 
 
 the data used here come from this [source](http://groupware.les.inf.puc-rio.br/har). 
 
-
+###Getting and cleaning data
 
 ```{r, echo=FALSE}
 
@@ -27,8 +27,6 @@ testing<-read.csv("pml-testing.csv", na.strings=c("", "NA"))
 
 The raw training set consists of `r dim(training)[1]` rows and `r dim(training)[2]` columns.
 
-##Cleaning the data
-
 ```{r "look", eval=FALSE, echo=FALSE}
 
 ##look at raw data
@@ -39,40 +37,108 @@ head(testing, 2)
 
 ```
 
-There are many NA values in the data. To keep these from biasing results and to simplify the analysis, I choose to eliminate them. 
+Inspection reveals there are many NA values in the data. To keep these from biasing results and to simplify the analysis, I choose to eliminate those columnes with nigh numbers (>50%) of NA values. The cleaning also eliminates non-data columns like timestamps, etc.
 
 ```{r , echo=FALSE}
-
-plot(training$gyros_belt_x, training$classe)
-
-colnames(training)
-
-nonNAcount <- apply(training, 2, function(x) length(which(!is.na(x))))
+#number of observations
 nObs<-length(training$classe)
 ```
 
-```{r, fig.width=7, fig.height=6, eval=FALSE}
-hist(nonNAcount/nObs)
 
 
-```
-
-
-
-```{r}
+```{r, echo=FALSE}
 
 Ctraining<-training[, colSums(is.na(training))/nObs<.5]
 #eliminate the same columns from the testing data 
 Ctesting<-testing[, colSums(is.na(training))/nObs<.5] 
 
-dim(training)
+#Ctraining[1:5, 1:10]
 
-dim(Ctraining)
+##Get rid of non-data columns
+
+Ctraining<-Ctraining[,8:ncol(Ctraining)]
+Ctesting<-Ctesting[,8:ncol(Ctesting)]
+
+#Ctraining$classe<-as.factor(Ctraining$classe)
+#Ctesting$classe<-as.factor(Ctesting$classe)
+
+str(Ctraining)
+
+#Ctraining[1:5, 1:10]
+#dim(training)
+
+
 
 ##verify no NAs left
 ##colSums(is.na(Ctraining))
 
 ```
 
-Cleaning the data b eliminating columns with > 50% NAs reduces the number of data columns from `r dim(training)[2]` to `r dim(Ctraining)[2]`.
+THis cleaning reduces the number of data columns from `r dim(training)[2]` to `r dim(Ctraining)[2]`. The testing data also is reduced to `r dim(Ctesting)[2]` columns.
 
+###Creating a Model
+
+First step is to create a model test subset
+
+```{r, echo=FALSE}
+library(caret)
+#library(AppliedPredictiveModeling)
+
+set.seed(8675309)
+
+        inTrain <- createDataPartition(y=Ctraining$classe, p=0.60, list=FALSE) 
+        Train <- Ctraining[inTrain,] 
+        Test <- Ctraining[-inTrain,]
+
+```
+
+
+###Some Plots
+
+```{r}
+
+colnames(Train)
+
+plot(Train[,2], Train$classe)
+plot(Train[,7], Train$classe)
+plot(Train[,25], Train$classe)
+plot(Train[,33], Train$classe)
+
+
+```
+
+###Build model
+
+A principal components analysis shows that we require 20 variables to explain 90% of the observed variation and 26 variables to explain 95% of the variation. 
+
+
+```{r}
+
+last<-ncol(Train)
+prep_Train<-preProcess(Train[,-last])
+centerscaled<-predict(prep_Train, Train[,-last])
+summary(prcomp(centerscaled))
+
+
+
+#model <- train(classe~., data = Train, method="rf", trControl = trainControl(method = "cv", number = 4, allowParallel = TRUE,verboseIter = TRUE))
+
+
+```
+
+
+```{r}
+        ##new variables
+        pcaprep<-preProcess(Train[,-last], method="pca", pcaComp=10)
+        TrainPCA<-predict(pcaprep, Train[,-last])
+
+        summary(TrainPCA)
+
+        head(TrainPCA)
+
+        ##use to build model
+        model<-train(Train$classe~., method="binomial", data=TrainPCA)
+
+        #model2<-train(Train$classe~., method="glm", data=Train)
+
+        #confusionMatrix(Test$classe,predict(modelfit,Test))

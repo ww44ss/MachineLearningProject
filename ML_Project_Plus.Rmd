@@ -1,6 +1,6 @@
-
+-
 ---
-title: "Machine Learning Project"
+title: "Machine Learning Project Plus"
 author: "Winston Saunders"
 date: "Dec 2014"
 output: html_document
@@ -217,4 +217,4 @@ Using data from the HAR dataset we are able to identify with high accuracy the t
 
 The model takes about 8 minutes to run on a laptop computer and is over 99% accurate. 
   
-    
+   

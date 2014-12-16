@@ -113,7 +113,7 @@ A principal components analysis shows that we require 20 variables to explain 90
 ```
 
 
-```{r}
+```{r, eval=FALSE}
         ##new variables
         pcaprep<-preProcess(Train[,-last], method="pca", pcaComp=10)
         TrainPCA<-predict(pcaprep, Train[,-last])
@@ -127,18 +127,18 @@ A principal components analysis shows that we require 20 variables to explain 90
         calctime<-proc.time()-time0
 
  ##use the model to make a prediction using the raw data
-        predictionPCA <- predict(modelPCA, Test)
+        predictionPCA <- predict(modelPCA, Test[,-last])
         ##test confusion matrix
         confusionMatrix(Test$classe, predictionPCA)
 
 
 ```
 
-```{r}
+```{r "run model"}
         ##understand how long calculation in taking
         time0 <- proc.time()
 
-        model1 <- train(classe~., data = Train, method="rf", trControl = trainControl(method = "boot", number = 4, allowParallel = TRUE,verboseIter = TRUE))
+        model1 <- train(classe~., data = Train, method="rf", trControl = trainControl(method = "cv", number = 4, allowParallel = TRUE,verboseIter = FALSE))
 
         calctime<-proc.time()-time0
 
@@ -156,4 +156,10 @@ A principal components analysis shows that we require 20 variables to explain 90
 
         #confusionMatrix(Test$classe,predict(modelfit,Test))
 ```
+
+
+```{r "evaluate"}
+
+
+        predict(model1, Ctesting)
 

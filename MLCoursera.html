@@ -151,50 +151,32 @@ plot(Train$classe,Train[,51], color=&quot;darkgreen&quot;)</code></pre>
         pcaprep&lt;-preProcess(Train[,-last], method=&quot;pca&quot;, pcaComp=10)
         TrainPCA&lt;-predict(pcaprep, Train[,-last])
 
-        ##use to build model
-        #model&lt;-train(Train$classe~., method=&quot;binomial&quot;, data=TrainPCA)
+##Build Random Forest Model
+        #Start a timer
+        time0 &lt;- proc.time()
+        
+        modelPCA&lt;-train(Train$classe~., method=&quot;rf&quot;, data=TrainPCA)
 
-        ##understand how long calculation in taking
+        calctime&lt;-proc.time()-time0
+
+ ##use the model to make a prediction using the raw data
+        predictionPCA &lt;- predict(modelPCA, Test[,-last])
+        ##test confusion matrix
+        confusionMatrix(Test$classe, predictionPCA)</code></pre>
+<pre class="r"><code>        ##understand how long calculation in taking
         time0 &lt;- proc.time()
 
-        model1 &lt;- train(classe~., data = Train, method=&quot;rf&quot;, trControl = trainControl(method = &quot;boot&quot;, number = 4, allowParallel = TRUE,verboseIter = TRUE))</code></pre>
+        model1 &lt;- train(classe~., data = Train, method=&quot;rf&quot;, trControl = trainControl(method = &quot;cv&quot;, number = 4, allowParallel = TRUE,verboseIter = FALSE))</code></pre>
 <pre><code>## Loading required package: randomForest
 ## randomForest 4.6-10
 ## Type rfNews() to see new features/changes/bug fixes.</code></pre>
-<pre><code>## + Resample1: mtry= 2 
-## - Resample1: mtry= 2 
-## + Resample1: mtry=27 
-## - Resample1: mtry=27 
-## + Resample1: mtry=52 
-## - Resample1: mtry=52 
-## + Resample2: mtry= 2 
-## - Resample2: mtry= 2 
-## + Resample2: mtry=27 
-## - Resample2: mtry=27 
-## + Resample2: mtry=52 
-## - Resample2: mtry=52 
-## + Resample3: mtry= 2 
-## - Resample3: mtry= 2 
-## + Resample3: mtry=27 
-## - Resample3: mtry=27 
-## + Resample3: mtry=52 
-## - Resample3: mtry=52 
-## + Resample4: mtry= 2 
-## - Resample4: mtry= 2 
-## + Resample4: mtry=27 
-## - Resample4: mtry=27 
-## + Resample4: mtry=52 
-## - Resample4: mtry=52 
-## Aggregating results
-## Selecting tuning parameters
-## Fitting mtry = 27 on full training set</code></pre>
 <pre class="r"><code>        calctime&lt;-proc.time()-time0
 
         ##Show the calculation time
         calctime</code></pre>
-<pre><code>##     user   system  elapsed 
-##  827.363    5.437 1434.060</code></pre>
-<pre class="r"><code>        ##use the model to make a prediction
+<pre><code>##    user  system elapsed 
+## 596.799   4.927 605.242</code></pre>
+<pre class="r"><code>        ##use the model to make a prediction using the raw data
         prediction1 &lt;- predict(model1, Test)
         ##test confusion matrix
         confusionMatrix(Test$classe, prediction1)</code></pre>
@@ -202,36 +184,39 @@ plot(Train$classe,Train[,51], color=&quot;darkgreen&quot;)</code></pre>
 ## 
 ##           Reference
 ## Prediction    A    B    C    D    E
-##          A 2231    0    0    0    1
-##          B   11 1502    5    0    0
-##          C    0    2 1358    8    0
+##          A 2230    1    0    0    1
+##          B   10 1504    4    0    0
+##          C    0    3 1357    8    0
 ##          D    0    1   19 1266    0
-##          E    0    1    3    6 1432
+##          E    0    0    3    6 1433
 ## 
 ## Overall Statistics
 ##                                           
-##                Accuracy : 0.9927          
-##                  95% CI : (0.9906, 0.9945)
-##     No Information Rate : 0.2858          
+##                Accuracy : 0.9929          
+##                  95% CI : (0.9907, 0.9946)
+##     No Information Rate : 0.2855          
 ##     P-Value [Acc &gt; NIR] : &lt; 2.2e-16       
 ##                                           
-##                   Kappa : 0.9908          
+##                   Kappa : 0.991           
 ##  Mcnemar's Test P-Value : NA              
 ## 
 ## Statistics by Class:
 ## 
 ##                      Class: A Class: B Class: C Class: D Class: E
-## Sensitivity            0.9951   0.9973   0.9805   0.9891   0.9993
-## Specificity            0.9998   0.9975   0.9985   0.9970   0.9984
-## Pos Pred Value         0.9996   0.9895   0.9927   0.9844   0.9931
-## Neg Pred Value         0.9980   0.9994   0.9958   0.9979   0.9998
-## Prevalence             0.2858   0.1919   0.1765   0.1631   0.1826
-## Detection Rate         0.2843   0.1914   0.1731   0.1614   0.1825
+## Sensitivity            0.9955   0.9967   0.9812   0.9891   0.9993
+## Specificity            0.9996   0.9978   0.9983   0.9970   0.9986
+## Pos Pred Value         0.9991   0.9908   0.9920   0.9844   0.9938
+## Neg Pred Value         0.9982   0.9992   0.9960   0.9979   0.9998
+## Prevalence             0.2855   0.1923   0.1763   0.1631   0.1828
+## Detection Rate         0.2842   0.1917   0.1730   0.1614   0.1826
 ## Detection Prevalence   0.2845   0.1935   0.1744   0.1639   0.1838
-## Balanced Accuracy      0.9975   0.9974   0.9895   0.9930   0.9989</code></pre>
+## Balanced Accuracy      0.9976   0.9972   0.9897   0.9930   0.9989</code></pre>
 <pre class="r"><code>        #model2&lt;-train(Train$classe~., method=&quot;glm&quot;, data=Train)
 
         #confusionMatrix(Test$classe,predict(modelfit,Test))</code></pre>
+<pre class="r"><code>        predict(model1, Ctesting)</code></pre>
+<pre><code>##  [1] B A B A A E D B A A B C B A E E A B B B
+## Levels: A B C D E</code></pre>
 </div>
 
 

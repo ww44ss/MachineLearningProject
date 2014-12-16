@@ -19,7 +19,6 @@ The data used for this project have been generously provided by [Groupware Brasi
 if(getwd()!="/Users/winstonsaunders/Documents/MachineLearningProject") setwd("MachineLearningProject")
 
 ##Read the files assigning na.strings to blanks and "NA"
-
 training<-read.csv("pml-training.csv", na.strings=c("", "NA"))
 testing<-read.csv("pml-testing.csv", na.strings=c("", "NA"))
 
@@ -133,12 +132,14 @@ A principal components analysis shows that we require 20 variables to explain 90
 
 
 ```
+Model the training data
 
-```{r "run model"}
+```{r "run model", echo=4:5}
         ##understand how long calculation in taking
         time0 <- proc.time()
-
-        model1 <- train(classe~., data = Train, method="rf", trControl = trainControl(method = "cv", number = 4, allowParallel = TRUE,verboseIter = FALSE))
+        ##here is the model
+        model1 <- train(classe~., data = Train, method="rf", 
+                        trControl = trainControl(method = "cv", number = 4, allowParallel = TRUE))
 
         calctime<-proc.time()-time0
 
@@ -157,9 +158,24 @@ A principal components analysis shows that we require 20 variables to explain 90
         #confusionMatrix(Test$classe,predict(modelfit,Test))
 ```
 
+The model has accuracy of 99.3% and took `r calctime[3]` seconds of elapsed time and `r calctime[2]` seconds of system time.
+  
+The 
+```{r "evaluate test data", echo=2}
+        answers<-predict(model1, Ctesting)
+```
 
-```{r "evaluate"}
+```{r "create file for answers", echo=FALSE}
 
+        pml_write_files = function(x){
+                n = length(x)
+                        for(i in 1:n){
+                        filename = paste0("problem_id_",i,".txt")
+                        write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+                        }
+                }
+ 
+        ##Write the answers
+        pml_write_files(answers)
 
-        predict(model1, Ctesting)
-
+```

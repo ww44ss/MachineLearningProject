@@ -27,6 +27,11 @@ if(getwd()!="/Users/winstonsaunders/Documents/MachineLearningProject") setwd("Ma
 training<-read.csv("pml-training.csv", na.strings=c("", "NA"))
 testing<-read.csv("pml-testing.csv", na.strings=c("", "NA"))
 
+###THIS IS TEMP CODE TO SPEED THINGS UP
+require(caret)
+xx <- createDataPartition(y=training$classe, p=0.20, list=FALSE)
+training<-training[xx,]
+
 ```
 
 The raw training set consists of `r dim(training)[1]` rows and `r dim(training)[2]` columns.
@@ -207,7 +212,7 @@ I use the funciton provided in class to create answer files.
                 }
  
         ##Write the answers
-        pml_write_files(answers)
+        #pml_write_files(answers)
 
 ```
 

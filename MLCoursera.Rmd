@@ -36,7 +36,7 @@ head(testing, 2)
 
 ```
 
-Inspection reveals there are many NA values in the data. A historgram shows that there are really two classes of columns. Those with data and those without. To filter them I choose to eliminate those columnes with nigh numbers (>50%) of NA values.   
+Inspection reveals there are many NA values in the data. A historgram shows that there are really two classes of columns. Those with data and those without. To filter them I choose to eliminate those columns with high numbers (>50%) of NA values.   
 The cleaning also includes steps to eliminate non-data columns like timestamps, etc.
 
 ```{r , echo=FALSE}
@@ -53,7 +53,7 @@ Here is a look at the raw data, showing both relevant and non-relevant data.
         #eliminate the same columns from the testing data 
         Ctesting<-testing[, colSums(is.na(training))/nObs<.5] 
         ##inspect the Ctraining Dataset
-        Ctraining[1:3, 3:9]
+        Ctraining[1:3, 5:11]
 
 ##Get rid of non-data columns
 
@@ -89,7 +89,8 @@ library(caret)
 
 ####B.2:Plot a few dependencies to get an idea of what the data look like
 
-In general is it hard to see strong dependencies of any particular variable. 
+In general is it hard to see strong dependencies of any particular variable thought there are clear differences between the plots.   
+
 ```{r, echo=FALSE}
 
 par(mfrow=c(2,3))
@@ -141,23 +142,24 @@ plot(Train$classe,Train[,52])
 
 
 ```
-Model the training data using the random forest technique. I played around with the parameters a bit to optimize execution 
+Model the training data using the random forest technique. I played around with the parameters a bit to optimize execution. For instance using model type cv seemed to increase speed a bit and produce what I felt was a better confusion matrix. Method "boot" tended to skew the error a bit. I'm unclear on the allow parallel but when I saw it in the documentation I used it since I have a multicore processor.  
+I experimented with the number variable. Reducing the number from 4 to 3 decreased the user time about 10% FYI, without apparent reduction in accuracy.   
 
-```{r "run model", echo=6:7}
+```{r "run model", echo=6:7, message=FALSE}
         ##Run this
         last<-ncol(Train)
         ##understand how long calculation in taking
         time0 <- proc.time()
         ##here is the model
         model1 <- train(classe~., data = Train, method="rf", 
-                        trControl = trainControl(method = "cv", number = 4, allowParallel = TRUE))
+                        trControl = trainControl(method = "cv", number = 3, allowParallel = TRUE))
 
         calctime<-proc.time()-time0
 ```
 
 The confusion matrix shows the accuracy of the model is very high. 
 
-```{r, echo=5}
+```{r, echo=c(3,5)}
 
         ##use the model to make a prediction using the raw data
         prediction1 <- predict(model1, Test)
@@ -182,9 +184,7 @@ We can use the model to make predictions on the testing data set from the exerci
 ```{r "evaluate test data", echo=1}
         answers<-predict(model1, Ctesting)
         
-        answertable<-cbind(Ctesting[, last], answers)
-
-        answertable
+        answers
 
 ```
 

@@ -201,8 +201,8 @@ require(caret)
 
 varvis$classe <- rownames(varvis)
 
-p <- qplot(Train[,aa], Train[,bb], col=classe, data=Train)
-p <- p + geom_point(aes(x=varvis[,1],y=varvis[,2],col=classe),size=3,shape=15,data=varvis)
+p <- qplot(Train[,aa], Train[,bb], col=classe, data=Train) + geom_point(size=0.8, alpha=0.1)
+p <- p + geom_point(aes(x=varvis[,1],y=varvis[,2],col=classe),size=5,shape=15,data=varvis)
 p <- p + xlab(colnames(Train)[aa]) + ylab(colnames(Train)[bb])
 
 
@@ -211,7 +211,7 @@ p
 
 ```
   
-The verical axis is __`r colnames(Train)[aa]`__ and the horizontal axis is __`r colnames(Train)[bb]`__. The broad distribution of points and closeness of the centroids is obvious. Nevertheless they are distinguishable - particularly the location of the __classe C__ centroid. 
+The horizontal axis is __`r colnames(Train)[aa]`__ and the verti axiscal is __`r colnames(Train)[bb]`__. The broad distribution of points and proximity of the centroids is obvious. Nevertheless they are distinguishable - particularly the location of the __classe C__ centroid. 
 
 With so many variables it is hard to visualize dependencies easily. Nevertheless, this gives an idea of how "noisy" the data appear and yet how powerful the model is at making distinctions. 
   

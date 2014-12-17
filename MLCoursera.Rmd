@@ -99,14 +99,16 @@ I plot a few columns of the data just to see what we are dealing with. In genera
 ```{r, echo=FALSE}
 
 par(mfrow=c(2,3))
-plot(Train$classe,Train[,2])
-plot(Train$classe,Train[,16])
-plot(Train$classe,Train[,27])
-plot(Train$classe,Train[,31])
-plot(Train$classe,Train[,40])
-plot(Train$classe,Train[,42])
+plot(Train$classe,Train[,2], main=colnames(Train)[2])
+plot(Train$classe,Train[,16], main=colnames(Train)[16])
+plot(Train$classe,Train[,27], main=colnames(Train)[27])
+plot(Train$classe,Train[,31], main=colnames(Train)[31])
+plot(Train$classe,Train[,40], main=colnames(Train)[40])
+plot(Train$classe,Train[,42], main=colnames(Train)[42])
 
 ```
+
+Notice particularly the difference in the mean values for __classe C__ in `r colnames(Train)[40]` and `r colnames(Train)[42]`. We'll look at this again after the model is developed.
 
 ###C: Building a Model
 
@@ -148,7 +150,7 @@ So let's attempt a model....
 
 ```
 Model the training data using the random forest technique. I played around with the parameters a bit to optimize execution. For instance using model type cv seemed to increase speed a bit and produce what I felt was a better confusion matrix. Method "boot" tended to skew the error a bit. I'm unclear on the allow parallel but when I saw it in the documentation I used it since I have a multicore processor.  
-I experimented with the number variable. Using _number = 3_ decreased the user time about 25% from _number = 4_, without a noticable reduction in accuracy.   
+I experimented with the number variable. Using _number = 3_ decreased the user time about 25% from _number = 4_, without noticable reduction in accuracy.   
 
 ```{r "run model", echo=6:7, message=FALSE}
         ##Run this
@@ -180,7 +182,7 @@ A cross validation with the testing data subsetted from the original training da
 
 According to the confusion matrix the model has an accuracy of 99.3% and hence an estimated out of sample error rate of 0.7%.  
 
-For information this calculation took `r calctime[3]` seconds of elapsed time and `r calctime[2]` seconds of system time on a _MacBook Air_. Every time I ran it my battery level dropped about 5%!!!
+For information this calculation took `r calctime[3]` seconds of elapsed time and `r calctime[2]` seconds of system time on a _MacBook Air_. Every time I ran it my battery level dropped about 10%!!!
 
 ###D: Looking at points
 
@@ -199,8 +201,9 @@ require(caret)
 
 varvis$classe <- rownames(varvis)
 
-p <- qplot(Train[,aa], Train[,bb], col=classe, data=Train, alpha=.1)
-p <- p + geom_point(aes(x=varvis[,1],y=varvis[,2],col=classe),size=8,shape=4,data=varvis)
+p <- qplot(Train[,aa], Train[,bb], col=classe, data=Train)
+p <- p + geom_point(aes(x=varvis[,1],y=varvis[,2],col=classe),size=3,shape=15,data=varvis)
+p <- p + xlab(colnames(Train)[aa]) + ylab(colnames(Train)[bb])
 
 
 p
@@ -208,7 +211,9 @@ p
 
 ```
   
-The verical axis is __`r colnames(Train)[aa]`__ and the horizontal axis is __`r colnames(Train)[bb]`__. You can see the broad distribution of points and how closely the centroids are. With so many variables it is hard to visualize dependencies easily. Nevertheless, this gives an idea of how "noisy" the data appear and yet how powerful the model is at making distinctions. 
+The verical axis is __`r colnames(Train)[aa]`__ and the horizontal axis is __`r colnames(Train)[bb]`__. The broad distribution of points and closeness of the centroids is obvious. Nevertheless they are distinguishable - particularly the location of the __classe C__ centroid. 
+
+With so many variables it is hard to visualize dependencies easily. Nevertheless, this gives an idea of how "noisy" the data appear and yet how powerful the model is at making distinctions. 
   
 ###E. Using the model to make Predictions
 

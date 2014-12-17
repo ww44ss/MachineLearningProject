@@ -104,13 +104,13 @@ plot(Train$classe,Train[,16])
 plot(Train$classe,Train[,27])
 plot(Train$classe,Train[,31])
 plot(Train$classe,Train[,40])
-plot(Train$classe,Train[,51])
+plot(Train$classe,Train[,42])
 
 ```
 
 ###C: Building a Model
 
-When all else fails, build a model and see what you get. 
+So let's attempt a model....
 
 ```{r, eval=FALSE, echo=FALSE}
 ##This is some code I did not use in the final project. Tried to do a PCA on the variables hoping to speed up computation. 
@@ -157,7 +157,7 @@ I experimented with the number variable. Using _number = 3_ decreased the user t
         time0 <- proc.time()
         ##htraining control parameters and the model
         control1 <- trainControl(method = "cv", number = 3, allowParallel = TRUE)
-        model1 <- train(classe~., data = Train, method="rf", trControl = control1)
+        model1 <- train(classe~., data = Train, method="rf", trControl = control1, prox=TRUE)
 
         calctime<-proc.time()-time0
 ```
@@ -178,11 +178,39 @@ A cross validation with the testing data subsetted from the original training da
         #confusionMatrix(Test$classe,predict(modelfit,Test))
 ```
 
-According to the matrix the model has an accuracy of 99.3% and hence an estimated out of sample error rate of 0.7%. To be honest that blows me away. 
+According to the confusion matrix the model has an accuracy of 99.3% and hence an estimated out of sample error rate of 0.7%.  
 
 For information this calculation took `r calctime[3]` seconds of elapsed time and `r calctime[2]` seconds of system time on a _MacBook Air_. Every time I ran it my battery level dropped about 5%!!!
+
+###D: Looking at points
+
+Below is a graph of pairs of data points with two of the graphs above. 
+
+```{r "add prox plot", echo=FALSE, fig.align='center'}
+require(randomForest)
+require(caret)
+
+##pick columns
+        aa<-40
+        bb<-42
+##define class centers
+        varvis <- classCenter(Train[,c(aa,bb)], Train$classe, model1$finalModel$prox)
+        varvis <- as.data.frame(varvis)
+
+varvis$classe <- rownames(varvis)
+
+p <- qplot(Train[,aa], Train[,bb], col=classe, data=Train, alpha=.1)
+p <- p + geom_point(aes(x=varvis[,1],y=varvis[,2],col=classe),size=8,shape=4,data=varvis)
+
+
+p
+
+
+```
   
-###D. Using the model to make Predictions
+The verical axis is __`r colnames(Train)[aa]`__ and the horizontal axis is __`r colnames(Train)[bb]`__. You can see the broad distribution of points and how closely the centroids are. With so many variables it is hard to visualize dependencies easily. Nevertheless, this gives an idea of how "noisy" the data appear and yet how powerful the model is at making distinctions. 
+  
+###E. Using the model to make Predictions
 
 We can use the model to make predictions on the testing data set from the exercise. The model makes all predictions accurately. 
 

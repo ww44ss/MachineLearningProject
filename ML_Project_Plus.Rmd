@@ -19,7 +19,7 @@ The comprise motion measurements of different subjects doing a weight-lifting ac
 
 ###A: Getting and cleaning data
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, cache=TRUE}
 
 if(getwd()!="/Users/winstonsaunders/Documents/MachineLearningProject") setwd("MachineLearningProject")
 
@@ -49,7 +49,7 @@ head(testing, 2)
 Inspection reveals there are many NA values in the data. A historgram shows that there are really two classes of columns. Those with data and those without. To filter them I choose to eliminate those columns with high numbers (arbitrarily picked >50%) of NA values.   
 The cleaning also includes steps to eliminate non-data columns like timestamps, etc.
 
-```{r , echo=FALSE}
+```{r , echo=FALSE, cache=TRUE}
 #number of observations
 nObs<-length(training$classe)
 ```
@@ -162,10 +162,37 @@ I experimented with the number variable. Using _number = 3_ decreased the user t
         time0 <- proc.time()
         ##htraining control parameters and the model
         control1 <- trainControl(method = "cv", number = 3, allowParallel = TRUE)
-        model1 <- train(classe~., data = Train, method="rf", trControl = control1)
+        model1 <- train(classe~., data = Train, method="rf", trControl = control1, prox=TRUE)
 
         calctime<-proc.time()-time0
 ```
+
+```{r "add prox plot", echo=FALSE, fig.align='center'}
+require(randomForest)
+require(caret)
+
+
+aa<-12
+bb<-13
+varvis <- classCenter(Train[,c(aa,bb)], Train$classe, model1$finalModel$prox)
+varvis <- as.data.frame(varvis)
+
+
+
+varvis$classe <- rownames(varvis)
+
+varvis
+p <- qplot(Train[,aa], Train[,bb], col=classe,data=Train, alpha=0.1)
+p <- p + geom_point(aes(x=varvis[,1],y=varvis[,2],col=classe),size=8,shape=4,data=varvis)
+
+
+p
+
+
+
+```
+
+
 
 A cross validation with the testing data subsetted from the original training data shows the model is very accurate. The confusion matrix is below. 
 
